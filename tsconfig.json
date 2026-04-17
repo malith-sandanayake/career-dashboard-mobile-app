@@ -1,17 +1,27 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
     "paths": {
       "@/*": [
         "./*"
       ]
-    }
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  }
 }

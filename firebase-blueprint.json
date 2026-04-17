@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "Grade": {
+      "title": "Grade",
+      "description": "Academic grade for a specific module",
+      "type": "object",
+      "properties": {
+        "moduleCode": { "type": "string", "description": "UoP module code" },
+        "moduleName": { "type": "string", "description": "UoP module name" },
+        "credits": { "type": "number", "description": "Module credits" },
+        "gpaIncluded": { "type": "boolean", "description": "Whether module counts toward GPA" },
+        "semester": { "type": "number", "description": "Semester number (1-8)" },
+        "year": { "type": "number", "description": "Year number (1-4)" },
+        "grade": { "type": "string", "description": "Grade letter (A+, B-, etc.) or null" },
+        "status": { "type": "string", "enum": ["Completed", "InProgress", "Planned"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["moduleCode", "credits", "gpaIncluded", "semester", "year"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User preferences and targets",
+      "type": "object",
+      "properties": {
+        "targetGPA": { "type": "number", "description": "Target CGPA for predictions" },
+        "theme": { "type": "string", "enum": ["dark", "dimmed"] }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document"
+    },
+    "/users/{userId}/grades/{gradeId}": {
+      "schema": "Grade",
+      "description": "Collection of grades for the user"
+    }
+  }
+}

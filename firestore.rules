@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Default admin check
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "malithsandanayake@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidGrade(data) {
+      return data.moduleCode is string &&
+             data.credits is number &&
+             data.gpaIncluded is bool &&
+             data.semester is number &&
+             data.year is number &&
+             (data.grade == null || data.grade is string) &&
+             data.status in ['Completed', 'InProgress', 'Planned'];
+    }
+
+    function isValidProfile(data) {
+      return data.targetGPA is number && data.targetGPA >= 0 && data.targetGPA <= 4.0;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) && isValidProfile(request.resource.data);
+
+      match /grades/{gradeId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId) && isValidGrade(request.resource.data);
+      }
+    }
+  }
+}
