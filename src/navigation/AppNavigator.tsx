@@ -63,7 +63,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   return (
-    <div className="flex flex-col h-[720px] w-full max-w-[380px] bg-black overflow-hidden mx-auto sm:border-[8px] sm:border-border-accent sm:rounded-[40px] relative shadow-[0_0_50px_rgba(0,0,0,0.5),0_0_2px_#00FFFF] sm:my-8">
+    <div className="flex flex-col h-[720px] w-full max-w-[380px] bg-background overflow-hidden mx-auto sm:border-[8px] sm:border-border-accent sm:rounded-[40px] relative shadow-[0_0_50px_rgba(0,0,0,0.5),0_0_2px_#00FFFF] sm:my-8">
       {/* Simulated Status Bar */}
       <div className="h-11 flex justify-between items-center px-6 text-[10px] text-muted-text font-mono z-50 pointer-events-none">
         <span className="tracking-widest capitalize">E23-CMD</span>
@@ -86,7 +86,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </div>
 
       {/* Bottom Nav */}
-      <div className="absolute bottom-0 left-0 right-0 h-[70px] bg-black border-t border-border-accent flex items-center justify-around px-4 pb-2 z-40">
+      <div className="absolute bottom-0 left-0 right-0 h-[70px] bg-background border-t border-border-accent flex items-center justify-around px-4 pb-2 z-40">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
           return (

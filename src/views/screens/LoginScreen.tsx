@@ -7,7 +7,7 @@ export const LoginScreen: React.FC = () => {
   const { loginWithGoogle } = useAuth();
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-black text-white">
+    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background text-body-text">
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -27,7 +27,7 @@ export const LoginScreen: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             className="mb-8"
           >
-            <span className="text-6xl font-mono font-bold text-white cyan-glow tracking-tighter">INIT</span>
+            <span className="text-6xl font-mono font-bold text-body-text cyan-glow tracking-tighter">INIT</span>
           </motion.div>
           <p className="text-muted-text text-[11px] mt-4 leading-relaxed uppercase font-bold tracking-widest opacity-60">
             Biometric Linkage Required

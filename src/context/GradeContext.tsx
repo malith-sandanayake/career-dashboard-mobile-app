@@ -7,7 +7,9 @@ import { calculateRequiredGrade } from '../utils/predictiveEngine';
 interface GradeContextType {
   grades: Record<string, string>;
   targetGPA: number;
+  currentSemester: number;
   setTargetGPA: (val: number) => void;
+  setCurrentSemester: (val: number) => void;
   updateGrade: (code: string, grade: string | null) => Promise<void>;
   resetAll: () => Promise<void>;
   cgpa: number;
@@ -20,6 +22,7 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { user } = useAuth();
   const [grades, setGrades] = useState<Record<string, string>>({});
   const [targetGPA, setTargetGPAState] = useState(3.7);
+  const [currentSemester, setCurrentSemesterState] = useState(1);
 
   useEffect(() => {
     if (!user) {
@@ -37,6 +40,7 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const unsubProfile = firestoreService.subscribeToProfile(user.uid, (profile) => {
       if (profile?.targetGPA) setTargetGPAState(profile.targetGPA);
+      if (profile?.currentSemester) setCurrentSemesterState(profile.currentSemester);
     });
 
     return () => {
@@ -60,6 +64,12 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await firestoreService.updateProfile(user.uid, { targetGPA: val });
   };
 
+  const setCurrentSemester = async (val: number) => {
+    if (!user) return;
+    setCurrentSemesterState(val);
+    await firestoreService.updateProfile(user.uid, { currentSemester: val });
+  };
+
   const resetAll = async () => {
     if (!user) return;
     await firestoreService.resetGrades(user.uid, Object.keys(grades));
@@ -72,7 +82,9 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <GradeContext.Provider value={{
       grades,
       targetGPA,
+      currentSemester,
       setTargetGPA,
+      setCurrentSemester,
       updateGrade,
       resetAll,
       cgpa,
