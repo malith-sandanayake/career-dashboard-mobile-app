@@ -1,24 +1,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
+:root {
+  --background: #000000;
+  --surface: #0A0A0B;
+  --subtle-surface: rgba(255, 255, 255, 0.03);
+  --border-accent: #1C1C1E;
+  --neon-cyan: #00FFFF;
+  --neon-red: #FF3131;
+  --neon-green: #00FF88;
+  --muted-text: #8E8E93;
+  --body-text: #F2F2F7;
+}
+
+[data-theme="light"] {
+  --background: #F5F5F4;
+  --surface: #FFFFFF;
+  --subtle-surface: rgba(0, 0, 0, 0.03);
+  --border-accent: #E7E5E4;
+  --neon-cyan: #0E7490;
+  --neon-red: #B91C1C;
+  --neon-green: #15803D;
+  --muted-text: #78716C;
+  --body-text: #1C1917;
+}
+
 @theme {
   --font-sans: "Inter", "Helvetica Neue", Arial, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
 
-  --color-background: #000000;
-  --color-surface: #0D0D0D;
-  --color-border-accent: #1A1A1A;
-  --color-primary-accent: #00FFFF;
-  --color-neon-cyan: #00FFFF;
-  --color-neon-red: #FF003C;
-  --color-neon-green: #00FF88;
-  --color-muted-text: #555555;
-  --color-body-text: #CCCCCC;
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-subtle-surface: var(--subtle-surface);
+  --color-border-accent: var(--border-accent);
+  --color-primary-accent: var(--neon-cyan);
+  --color-neon-cyan: var(--neon-cyan);
+  --color-neon-red: var(--neon-red);
+  --color-neon-green: var(--neon-green);
+  --color-muted-text: var(--muted-text);
+  --color-body-text: var(--body-text);
 }
 
 @layer base {
   body {
-    @apply bg-background text-body-text font-sans antialiased;
+    @apply bg-background text-body-text font-sans antialiased transition-colors duration-300;
   }
 
   .font-mono {
@@ -27,29 +52,40 @@
 }
 
 .glass-card {
-  @apply bg-surface border border-border-accent rounded-xl relative overflow-hidden;
+  @apply bg-surface/80 border border-border-accent rounded-xl relative overflow-hidden backdrop-blur-md;
 }
 
 .stat-card-glow::after {
   content: '';
-  @apply absolute top-0 left-0 w-full h-[1px];
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+  @apply absolute top-0 left-0 w-full h-[1px] opacity-20;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
 }
 
 .cyan-glow {
-  text-shadow: 0 0 15px rgba(0, 255, 255, 0.25);
+  text-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+}
+
+[data-theme="light"] .cyan-glow {
+  text-shadow: 0 0 5px rgba(14, 116, 144, 0.1);
+  @apply text-neon-cyan;
 }
 
 .alert-row {
-  @apply bg-[#FF003C]/5 border border-[#FF003C]/20 rounded-xl p-3 flex items-center gap-3;
+  @apply bg-neon-red/5 border border-neon-red/20 rounded-xl p-3 flex items-center gap-3;
 }
 
-/* Scrollbar styling */
+::selection {
+  @apply bg-neon-cyan/30 text-white;
+}
+
+[data-theme="light"] ::selection {
+  @apply bg-neon-cyan/20 text-black;
+}
 ::-webkit-scrollbar {
   width: 3px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-black;
+  background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
   @apply bg-muted-text/30 rounded-full;

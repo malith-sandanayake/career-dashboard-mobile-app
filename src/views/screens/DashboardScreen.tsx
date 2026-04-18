@@ -4,11 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import { motion } from 'motion/react';
 import { CURRICULUM } from '../../data/curriculum';
 import { calculateSGPA, getGPAIncludedCreditsCompleted, getTotalGPACredits } from '../../utils/gpaCalculator';
-import { Activity, Target, CheckCircle, ListPlus, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Activity, Target, CheckCircle, ListPlus, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export const DashboardScreen: React.FC = () => {
-  const { cgpa, targetGPA, grades, predictions } = useGrades();
+  const { cgpa, targetGPA, grades, predictions, currentSemester, setCurrentSemester } = useGrades();
 
   const completedCredits = getGPAIncludedCreditsCompleted(grades);
   const totalCredits = getTotalGPACredits();
@@ -21,13 +21,31 @@ export const DashboardScreen: React.FC = () => {
     <div className="flex-1 flex flex-col p-5 pb-24 space-y-5 overflow-y-auto no-scrollbar">
       {/* Header Stat */}
       <div className="text-center pt-2">
-        <h1 className="font-mono text-[10px] tracking-[3px] text-neon-cyan uppercase mb-2">Academic Command Center</h1>
+        <div className="flex justify-center items-center space-x-2 mb-2">
+          <h1 className="font-mono text-[10px] tracking-[3px] text-neon-cyan uppercase">Academic Command Center</h1>
+          <div className="flex bg-subtle-surface border border-border-accent rounded-md p-0.5">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
+              <button
+                key={s}
+                onClick={() => setCurrentSemester(s)}
+                className={cn(
+                  "w-5 h-5 flex items-center justify-center text-[8px] font-bold rounded transition-all",
+                  currentSemester === s 
+                    ? "bg-neon-cyan text-black shadow-[0_0_8px_#00FFFF]" 
+                    : "text-muted-text hover:text-body-text"
+                )}
+              >
+                S{s}
+              </button>
+            ))}
+          </div>
+        </div>
         <motion.div
            initial={{ scale: 0.95, opacity: 0 }}
            animate={{ scale: 1, opacity: 1 }}
            className="relative inline-block"
         >
-          <span className="text-5xl font-mono font-bold text-white cyan-glow">{cgpa.toFixed(2)}</span>
+          <span className="text-5xl font-mono font-bold text-body-text cyan-glow">{cgpa.toFixed(2)}</span>
         </motion.div>
         
         <div className="w-3/5 h-0.5 bg-border-accent mx-auto mt-4 relative">
@@ -69,16 +87,29 @@ export const DashboardScreen: React.FC = () => {
         </div>
         
         <div className="divide-y divide-border-accent">
-          {activePredictions.slice(0, 5).map(([code, g]) => {
+          {activePredictions.sort(([a], [b]) => {
+            const modA = CURRICULUM.find(m => m.code === a);
+            const modB = CURRICULUM.find(m => m.code === b);
+            if (modA?.semester === currentSemester) return -1;
+            if (modB?.semester === currentSemester) return 1;
+            return 0;
+          }).slice(0, 5).map(([code, g]) => {
             const module = CURRICULUM.find(m => m.code === code);
+            const isCurrent = module?.semester === currentSemester;
             return (
-              <div key={code} className="flex justify-between items-center py-3">
+              <div key={code} className={cn(
+                "flex justify-between items-center py-3 px-2 -mx-2 transition-colors",
+                isCurrent ? "bg-neon-cyan/5 border-l-2 border-neon-cyan" : ""
+              )}>
                 <div className="flex flex-col">
-                  <span className="font-mono text-[13px] text-white tracking-tight">{code}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-mono text-[13px] text-body-text tracking-tight font-bold">{code}</span>
+                    {isCurrent && <span className="text-[7px] bg-neon-cyan text-black px-1 rounded font-bold">NOW</span>}
+                  </div>
                   <span className="text-[10px] text-muted-text truncate max-w-[120px]">{module?.name}</span>
                 </div>
                 <div className="text-right">
-                  <span className="block text-[10px] text-muted-text uppercase mb-0.5">MIN REQ</span>
+                  <span className="block text-[9px] text-muted-text uppercase mb-0.5">MIN REQ</span>
                   <span className={cn(
                     "font-mono text-sm font-bold",
                     g === 'UNREACHABLE' ? "text-neon-red" : "text-neon-green"
@@ -109,9 +140,9 @@ export const DashboardScreen: React.FC = () => {
   );
 };
 
-const StatCard: React.FC<{ label: string, value: string, valueColor?: string }> = ({ label, value, valueColor = "text-white" }) => (
+const StatCard: React.FC<{ label: string, value: string, valueColor?: string }> = ({ label, value, valueColor = "text-body-text" }) => (
   <div className="glass-card stat-card-glow p-4 flex flex-col items-center text-center">
     <span className="text-[10px] text-muted-text uppercase font-bold tracking-tight mb-1">{label}</span>
-    <span className={cn("font-mono text-lg font-medium", valueColor)}>{value}</span>
+    <span className={cn("font-mono text-lg font-bold", valueColor)}>{value}</span>
   </div>
 );
