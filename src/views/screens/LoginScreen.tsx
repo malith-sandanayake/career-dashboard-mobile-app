@@ -1,58 +1,116 @@
 import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { motion } from 'motion/react';
-import { Shield, Smartphone } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 export const LoginScreen: React.FC = () => {
-  const { loginWithGoogle } = useAuth();
+  const { loginAnonymously, loading } = useAuth();
+  const { colors } = useTheme();
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-background text-body-text">
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="w-full max-w-sm flex flex-col items-center text-center space-y-8"
-      >
-        <div className="relative">
-          <div className="absolute inset-0 blur-3xl bg-neon-cyan/30 rounded-full" />
-          <div className="relative w-24 h-24 rounded-2xl bg-surface border-2 border-neon-cyan/20 flex items-center justify-center rotate-45 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
-            <Shield size={40} className="text-neon-cyan -rotate-45" />
-          </div>
-        </div>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.content}>
 
-        <div>
-          <h1 className="font-mono text-[10px] tracking-[3.5px] text-neon-cyan uppercase mb-4">Academic Command Center</h1>
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="mb-8"
-          >
-            <span className="text-6xl font-mono font-bold text-body-text cyan-glow tracking-tighter">INIT</span>
-          </motion.div>
-          <p className="text-muted-text text-[11px] mt-4 leading-relaxed uppercase font-bold tracking-widest opacity-60">
-            Biometric Linkage Required
-          </p>
-        </div>
+        <Text style={[styles.eyebrow, { color: colors.accent }]}>ACADEMIC COMMAND CENTER</Text>
+        <Text style={[styles.title, { color: colors.text }]}>INIT</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Biometric Linkage Required</Text>
 
-        <div className="w-full pt-8 space-y-4">
-          <button
-            onClick={loginWithGoogle}
-            className="w-full p-4 bg-neon-cyan text-black font-bold uppercase tracking-widest rounded-xl flex items-center justify-center space-x-3 shadow-[0_0_20px_rgba(0,255,255,0.4)] active:scale-95 transition-all"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-            <span>Access Terminal</span>
-          </button>
+        <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-          <p className="text-[10px] text-muted-text uppercase tracking-widest flex items-center justify-center space-x-2">
-            <Smartphone size={10} />
-            <span>Optimized for Galaxy A55</span>
-          </p>
-        </div>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.accentBorder }]}>
+          <Text style={[styles.cardTitle, { color: colors.textSub }]}>SYSTEM STATUS</Text>
+          <View style={styles.statusRow}>
+            <View style={[styles.statusDot, { backgroundColor: colors.accent }]} />
+            <Text style={[styles.statusText, { color: colors.textSub }]}>Firebase connected</Text>
+          </View>
+          <View style={styles.statusRow}>
+            <View style={[styles.statusDot, { backgroundColor: colors.accent }]} />
+            <Text style={[styles.statusText, { color: colors.textSub }]}>Anonymous auth enabled</Text>
+          </View>
+          <View style={styles.statusRow}>
+            <View style={[styles.statusDot, { backgroundColor: colors.textMuted }]} />
+            <Text style={[styles.statusText, { color: colors.textMuted }]}>Awaiting login...</Text>
+          </View>
+        </View>
 
-        <div className="pt-12 text-[9px] text-muted-text opacity-40 uppercase tracking-tighter">
-          Secure Biometric Loop Active • End-to-End Encryption Enabled
-        </div>
-      </motion.div>
-    </div>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.accent }]}
+          onPress={loginAnonymously}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.background} />
+          ) : (
+            <Text style={[styles.buttonText, { color: colors.background }]}>ACCESS TERMINAL</Text>
+          )}
+        </TouchableOpacity>
+
+        <Text style={[styles.footer, { color: colors.textMuted }]}>
+          Optimized for Galaxy A55 · Career Dashboard
+        </Text>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  content: {
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 340,
+  },
+  eyebrow: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  title: {
+    fontSize: 72,
+    fontWeight: 'bold',
+    letterSpacing: 8,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 12,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 32,
+  },
+  divider: { width: '100%', height: 1, marginBottom: 24 },
+  card: {
+    width: '100%',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 28,
+    gap: 10,
+  },
+  cardTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusText: { fontSize: 12 },
+  button: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  buttonText: { fontWeight: 'bold', fontSize: 14, textTransform: 'uppercase', letterSpacing: 2 },
+  footer: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, textAlign: 'center' },
+});

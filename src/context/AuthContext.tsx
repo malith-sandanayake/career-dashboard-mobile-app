@@ -1,17 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   onAuthStateChanged,
-  signInWithPopup,
-  GoogleAuthProvider,
+  signInAnonymously,
   signOut,
   User
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
+import { Alert } from 'react-native';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  loginWithGoogle: () => Promise<void>;
+  loginAnonymously: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -22,24 +23,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setLoading(false);
       if (u) {
-        localStorage.setItem('user_uid', u.uid);
+        await AsyncStorage.setItem('user_uid', u.uid);
       } else {
-        localStorage.removeItem('user_uid');
+        await AsyncStorage.removeItem('user_uid');
       }
     });
     return unsubscribe;
   }, []);
 
-  const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
+  const loginAnonymously = async () => {
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Login failed', error);
+      await signInAnonymously(auth);
+    } catch (error: any) {
+      console.error('Anonymous Login Failed:', error);
+      Alert.alert('Login Error', error.message);
     }
   };
 
@@ -52,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, loginAnonymously, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -60,6 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };

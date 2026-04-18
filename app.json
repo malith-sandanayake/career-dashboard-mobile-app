@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Career Dashboard",
+    "slug": "react-example",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "careerdashboard",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "android": {
+      "package": "com.malith.careerdashboard",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8613e41b-fdf9-433c-8d01-04009b098136"
+      }
+    },
+    "owner": "malith-sandanayake"
+  }
+}
