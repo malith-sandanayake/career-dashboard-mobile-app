@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { firestoreService } from '../services/firestoreService';
 import { calculateCGPA, calculateSGPA } from '../utils/gpaCalculator';
 import { calculateRequiredGrade } from '../utils/predictiveEngine';
+import { CURRICULUM } from '../data/curriculum';
 
 interface GradeContextType {
   grades: Record<string, string>;
@@ -51,10 +52,17 @@ export const GradeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateGrade = async (code: string, grade: string | null) => {
     if (!user) return;
+    // Find the full module so we can include required fields for Firestore rules
+    const module = CURRICULUM.find(m => m.code === code);
+    if (!module) return;
     await firestoreService.updateGrade(user.uid, code, {
       moduleCode: code,
       grade,
-      status: grade ? 'Completed' : 'InProgress'
+      credits: module.credits,
+      gpaIncluded: module.gpaIncluded,
+      semester: module.semester,
+      year: module.year,
+      status: grade ? 'Completed' : 'InProgress',
     });
   };
 

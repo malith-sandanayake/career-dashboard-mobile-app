@@ -1,148 +1,179 @@
 import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useGrades } from '../../context/GradeContext';
-import { useAuth } from '../../context/AuthContext';
-import { motion } from 'motion/react';
-import { CURRICULUM } from '../../data/curriculum';
+import { useTheme } from '../../context/ThemeContext';
 import { calculateSGPA, getGPAIncludedCreditsCompleted, getTotalGPACredits } from '../../utils/gpaCalculator';
-import { Activity, Target, CheckCircle, ListPlus, AlertTriangle } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { BottomNavBar } from '../components/BottomNavBar';
+import { CURRICULUM } from '../../data/curriculum';
 
 export const DashboardScreen: React.FC = () => {
-  const { cgpa, targetGPA, grades, predictions, currentSemester, setCurrentSemester } = useGrades();
+  const { cgpa, targetGPA, grades, currentSemester, setCurrentSemester } = useGrades();
+  const { colors } = useTheme();
 
   const completedCredits = getGPAIncludedCreditsCompleted(grades);
   const totalCredits = getTotalGPACredits();
-  const progressPercent = Math.min((cgpa / targetGPA) * 100, 100);
+  const sgpa = calculateSGPA(currentSemester, grades);
+  const progressPercent = targetGPA > 0 ? Math.min((cgpa / targetGPA) * 100, 100) : 0;
 
-  const activePredictions = Object.entries(predictions).filter(([code]) => !grades[code]);
-  const failingToReachTarget = activePredictions.some(([_, g]) => g === 'UNREACHABLE');
+  const semesterModules = CURRICULUM.filter(m => m.semester === currentSemester);
+  const semesterCompleted = semesterModules.filter(m => grades[m.code]).length;
 
   return (
-    <div className="flex-1 flex flex-col p-5 pb-24 space-y-5 overflow-y-auto no-scrollbar">
-      {/* Header Stat */}
-      <div className="text-center pt-2">
-        <div className="flex justify-center items-center space-x-2 mb-2">
-          <h1 className="font-mono text-[10px] tracking-[3px] text-neon-cyan uppercase">Academic Command Center</h1>
-          <div className="flex bg-subtle-surface border border-border-accent rounded-md p-0.5">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
-              <button
-                key={s}
-                onClick={() => setCurrentSemester(s)}
-                className={cn(
-                  "w-5 h-5 flex items-center justify-center text-[8px] font-bold rounded transition-all",
-                  currentSemester === s 
-                    ? "bg-neon-cyan text-black shadow-[0_0_8px_#00FFFF]" 
-                    : "text-muted-text hover:text-body-text"
-                )}
-              >
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.headerLabel, { color: colors.accent }]}>ACADEMIC COMMAND CENTER</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Dashboard</Text>
+        </View>
+
+        {/* CGPA Card */}
+        <View style={[styles.cgpaCard, { backgroundColor: colors.surface, borderColor: colors.accentBorder }]}>
+          <Text style={[styles.cgpaLabel, { color: colors.textMuted }]}>CUMULATIVE GPA</Text>
+          <Text style={[styles.cgpaValue, { color: colors.accent }]}>{cgpa.toFixed(2)}</Text>
+          <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+            <View style={[styles.progressFill, { width: `${progressPercent}%`, backgroundColor: colors.accent }]} />
+          </View>
+          <Text style={[styles.cgpaTarget, { color: colors.textMuted }]}>Target: {targetGPA.toFixed(1)}</Text>
+        </View>
+
+        {/* Stats Row */}
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>CREDITS{'\n'}DONE</Text>
+            <Text style={[styles.statValue, { color: colors.accent }]}>{completedCredits}</Text>
+            <Text style={[styles.statSub, { color: colors.textMuted }]}>of {totalCredits}</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>SEM {currentSemester}{'\n'}GPA</Text>
+            <Text style={[styles.statValue, { color: colors.accent }]}>{sgpa.toFixed(2)}</Text>
+            <Text style={[styles.statSub, { color: colors.textMuted }]}>{semesterCompleted}/{semesterModules.length} done</Text>
+          </View>
+          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.statLabel, { color: colors.textMuted }]}>TO{'\n'}TARGET</Text>
+            <Text style={[styles.statValue, { color: colors.accent }]}>{Math.round(progressPercent)}%</Text>
+            <Text style={[styles.statSub, { color: colors.textMuted }]}>progress</Text>
+          </View>
+        </View>
+
+        {/* Semester Selector */}
+        <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>SELECT SEMESTER</Text>
+        <View style={styles.semesterSelector}>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
+            <TouchableOpacity
+              key={s}
+              style={[
+                styles.semesterButton,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                currentSemester === s && { backgroundColor: colors.accent, borderColor: colors.accent },
+              ]}
+              onPress={() => setCurrentSemester(s)}
+            >
+              <Text style={[
+                styles.semesterButtonText,
+                { color: colors.textMuted },
+                currentSemester === s && { color: colors.background },
+              ]}>
                 S{s}
-              </button>
-            ))}
-          </div>
-        </div>
-        <motion.div
-           initial={{ scale: 0.95, opacity: 0 }}
-           animate={{ scale: 1, opacity: 1 }}
-           className="relative inline-block"
-        >
-          <span className="text-5xl font-mono font-bold text-body-text cyan-glow">{cgpa.toFixed(2)}</span>
-        </motion.div>
-        
-        <div className="w-3/5 h-0.5 bg-border-accent mx-auto mt-4 relative">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            className="h-full bg-neon-cyan shadow-[0_0_10px_rgba(0,255,255,1)] absolute left-0"
-          />
-        </div>
-      </div>
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      {/* Grid Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="Target"
-          value={targetGPA.toFixed(2)}
-          valueColor="text-neon-cyan"
-        />
-        <StatCard
-          label="Gap"
-          value={(cgpa - targetGPA).toFixed(2)}
-          valueColor={cgpa >= targetGPA ? "text-neon-green" : "text-neon-red"}
-        />
-        <StatCard
-          label="Credits"
-          value={`${completedCredits} / ${totalCredits}`}
-        />
-        <StatCard
-          label="Modules"
-          value={`${CURRICULUM.filter(m => m.gpaIncluded && !grades[m.code]).length} Rem.`}
-        />
-      </div>
+        {/* Module List for current semester */}
+        <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>SEMESTER {currentSemester} MODULES</Text>
+        {semesterModules.map(m => {
+          const grade = grades[m.code];
+          return (
+            <View key={m.code} style={[styles.moduleRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.moduleInfo}>
+                <Text style={[styles.moduleCode, { color: colors.accent }]}>{m.code}</Text>
+                <Text style={[styles.moduleName, { color: colors.textSub }]} numberOfLines={1}>{m.name}</Text>
+                <Text style={[styles.moduleMeta, { color: colors.textMuted }]}>{m.credits} CR{!m.gpaIncluded ? ' · NO GPA' : ''}</Text>
+              </View>
+              <View style={[
+                styles.gradeBadge,
+                grade
+                  ? { backgroundColor: colors.accentBg, borderColor: colors.accentBorder }
+                  : { backgroundColor: colors.border, borderColor: colors.borderStrong }
+              ]}>
+                <Text style={[styles.gradeText, { color: grade ? colors.accent : colors.textMuted }]}>
+                  {grade || '—'}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
 
-      {/* Predictive Engine Panel */}
-      <div className="bg-surface/80 border border-neon-cyan/10 rounded-[20px] p-5 flex-1 min-h-[300px]">
-        <div className="flex justify-between items-center mb-4">
-          <span className="font-mono text-[11px] text-neon-cyan tracking-wider">PREDICTIVE ENGINE</span>
-          <span className="text-[9px] text-muted-text uppercase font-bold opacity-50">S5 IN-PROGRESS</span>
-        </div>
-        
-        <div className="divide-y divide-border-accent">
-          {activePredictions.sort(([a], [b]) => {
-            const modA = CURRICULUM.find(m => m.code === a);
-            const modB = CURRICULUM.find(m => m.code === b);
-            if (modA?.semester === currentSemester) return -1;
-            if (modB?.semester === currentSemester) return 1;
-            return 0;
-          }).slice(0, 5).map(([code, g]) => {
-            const module = CURRICULUM.find(m => m.code === code);
-            const isCurrent = module?.semester === currentSemester;
-            return (
-              <div key={code} className={cn(
-                "flex justify-between items-center py-3 px-2 -mx-2 transition-colors",
-                isCurrent ? "bg-neon-cyan/5 border-l-2 border-neon-cyan" : ""
-              )}>
-                <div className="flex flex-col">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-mono text-[13px] text-body-text tracking-tight font-bold">{code}</span>
-                    {isCurrent && <span className="text-[7px] bg-neon-cyan text-black px-1 rounded font-bold">NOW</span>}
-                  </div>
-                  <span className="text-[10px] text-muted-text truncate max-w-[120px]">{module?.name}</span>
-                </div>
-                <div className="text-right">
-                  <span className="block text-[9px] text-muted-text uppercase mb-0.5">MIN REQ</span>
-                  <span className={cn(
-                    "font-mono text-sm font-bold",
-                    g === 'UNREACHABLE' ? "text-neon-red" : "text-neon-green"
-                  )}>{g}</span>
-                </div>
-              </div>
-            );
-          })}
-          {activePredictions.length === 0 && (
-            <p className="text-center py-10 text-xs text-muted-text italic">No modules in progress</p>
-          )}
-        </div>
-      </div>
-
-      {/* Alert Banner */}
-      {failingToReachTarget ? (
-        <div className="alert-row">
-          <span className="font-mono font-bold text-neon-red">[!]</span>
-          <span className="text-[11px] text-body-text leading-tight">High workload detected. A grade required in multiple modules to meet First Class.</span>
-        </div>
-      ) : (
-        <div className="bg-neon-green/5 border border-neon-green/20 rounded-xl p-3 flex items-center gap-3">
-          <span className="font-mono font-bold text-neon-green">[✓]</span>
-          <span className="text-[11px] text-body-text leading-tight">Academic parameters stable. Maintain current trajectory to meet target.</span>
-        </div>
-      )}
-    </div>
+        <View style={styles.bottomPad} />
+      </ScrollView>
+      <BottomNavBar />
+    </View>
   );
 };
 
-const StatCard: React.FC<{ label: string, value: string, valueColor?: string }> = ({ label, value, valueColor = "text-body-text" }) => (
-  <div className="glass-card stat-card-glow p-4 flex flex-col items-center text-center">
-    <span className="text-[10px] text-muted-text uppercase font-bold tracking-tight mb-1">{label}</span>
-    <span className={cn("font-mono text-lg font-bold", valueColor)}>{value}</span>
-  </div>
-);
+const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+  container: { flex: 1 },
+  scrollContent: { padding: 16 },
+  header: { marginBottom: 20 },
+  headerLabel: { fontSize: 9, fontWeight: 'bold', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: 'bold', letterSpacing: 1 },
+  cgpaCard: {
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  cgpaLabel: { fontSize: 10, fontWeight: 'bold', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 },
+  cgpaValue: { fontSize: 64, fontWeight: 'bold', lineHeight: 72, marginBottom: 12 },
+  progressBar: { width: '100%', height: 4, borderRadius: 2, overflow: 'hidden', marginBottom: 8 },
+  progressFill: { height: '100%', borderRadius: 2 },
+  cgpaTarget: { fontSize: 11, letterSpacing: 1 },
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
+  statCard: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  statLabel: { fontSize: 8, fontWeight: 'bold', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6, textAlign: 'center' },
+  statValue: { fontSize: 22, fontWeight: 'bold' },
+  statSub: { fontSize: 9, marginTop: 2 },
+  sectionTitle: { fontSize: 9, fontWeight: 'bold', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 },
+  semesterSelector: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
+  semesterButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  semesterButtonText: { fontSize: 12, fontWeight: 'bold' },
+  moduleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+  },
+  moduleInfo: { flex: 1, marginRight: 12 },
+  moduleCode: { fontSize: 11, fontWeight: 'bold', marginBottom: 2 },
+  moduleName: { fontSize: 12, marginBottom: 2 },
+  moduleMeta: { fontSize: 10 },
+  gradeBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  gradeText: { fontSize: 13, fontWeight: 'bold' },
+  bottomPad: { height: 8 },
+});

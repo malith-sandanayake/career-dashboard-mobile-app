@@ -1,141 +1,212 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useGrades } from '../../context/GradeContext';
 import { useTheme } from '../../context/ThemeContext';
-import { LogOut, User, Shield, Moon, Sun, Trash2, Smartphone } from 'lucide-react';
-import { motion } from 'motion/react';
-import { cn } from '../../lib/utils';
+import { BottomNavBar } from '../components/BottomNavBar';
 
 export const SettingsScreen: React.FC = () => {
   const { user, logout } = useAuth();
   const { targetGPA, setTargetGPA, resetAll } = useGrades();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, colors, toggleTheme } = useTheme();
+  const [newTarget, setNewTarget] = useState(targetGPA.toString());
 
-  const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset all your grades? This cannot be undone.')) {
-      resetAll();
+  const handleUpdateTarget = () => {
+    const target = parseFloat(newTarget);
+    if (!isNaN(target) && target > 0 && target <= 4.0) {
+      setTargetGPA(target);
+      Alert.alert('Updated', `Target GPA set to ${target.toFixed(1)}`);
+    } else {
+      Alert.alert('Invalid', 'Please enter a value between 0 and 4.0');
     }
   };
 
+  const handleReset = () => {
+    Alert.alert(
+      'Reset All Grades',
+      'Are you sure? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Reset', onPress: () => resetAll(), style: 'destructive' },
+      ]
+    );
+  };
+
   return (
-    <div className="flex-1 flex flex-col p-4 pb-24 space-y-6 overflow-y-auto">
-      <h1 className="text-2xl font-bold text-body-text">Settings</h1>
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
 
-      {/* Profile Section */}
-      <div className="glass-card stat-card-glow p-6 border-border-accent">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="w-14 h-14 rounded-full bg-neon-cyan/10 flex items-center justify-center border border-neon-cyan/20">
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt="Avatar" className="w-12 h-12 rounded-full scale-95" referrerPolicy="no-referrer" />
-            ) : (
-              <User size={24} className="text-neon-cyan" />
-            )}
-          </div>
-          <div>
-            <h2 className="text-md font-bold text-body-text tracking-tight">{user?.displayName || 'Engineer'}</h2>
-            <p className="text-[10px] text-muted-text uppercase tracking-[2px] font-mono">{user?.uid.slice(0, 8)}</p>
-          </div>
-        </div>
-        <div className="pt-4 border-t border-border-accent">
-          <p className="text-[9px] text-muted-text uppercase font-bold mb-2 tracking-widest">Device Integrity</p>
-          <div className="flex items-center justify-between text-[10px] text-body-text font-mono">
-            <span className="opacity-60">MODEL_A55_PRO</span>
-            <span className="text-neon-cyan">ENCRYPTED</span>
-          </div>
-        </div>
-      </div>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.headerLabel, { color: colors.accent }]}>ACADEMIC COMMAND CENTER</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
+        </View>
 
-      {/* Academic Targets */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-bold text-muted-text uppercase tracking-wider pl-1 font-mono">Mission Parameters</h3>
-        <div className="glass-card p-4 space-y-4 border-border-accent">
-           <div className="flex justify-between items-center">
-             <div>
-               <p className="text-sm font-bold text-body-text">Target CGPA</p>
-               <p className="text-xs text-muted-text">Used for predictive analysis</p>
-             </div>
-             <div className="flex space-x-2">
-               {[3.3, 3.5, 3.7, 4.0].map(val => (
-                 <button
-                    key={val}
-                    onClick={() => setTargetGPA(val)}
-                    className={cn(
-                      "px-3 py-1 rounded-lg font-mono text-xs border transition-all",
-                      targetGPA === val ? "bg-neon-cyan text-background border-neon-cyan" : "bg-subtle-surface border-border-accent text-body-text"
-                    )}
-                 >
-                   {val.toFixed(1)}
-                 </button>
-               ))}
-             </div>
-           </div>
-        </div>
-      </div>
+        {/* Profile Section */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>PROFILE</Text>
+          <View style={[styles.userRow, { borderBottomColor: colors.border }]}>
+            <View style={[styles.avatar, { backgroundColor: colors.accentBg, borderColor: colors.accentBorder }]}>
+              <Text style={[styles.avatarText, { color: colors.accent }]}>
+                {user?.displayName ? user.displayName[0].toUpperCase() : '?'}
+              </Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { color: colors.text }]}>
+                {user?.displayName || (user?.isAnonymous ? 'Anonymous User' : 'User')}
+              </Text>
+              <Text style={[styles.userEmail, { color: colors.textMuted }]}>
+                {user?.email || (user?.isAnonymous ? 'Guest Session' : 'No email')}
+              </Text>
+              <Text style={[styles.userId, { color: colors.textMuted }]}>
+                UID: {user?.uid?.slice(0, 12)}...
+              </Text>
+            </View>
+          </View>
+        </View>
 
-      {/* App Prefs */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-bold text-muted-text uppercase tracking-wider pl-1 font-mono">Interface</h3>
-        <div className="glass-card divide-y divide-border-accent border-border-accent overflow-hidden">
-           <button 
-             onClick={toggleTheme}
-             className="w-full p-4 flex justify-between items-center hover:bg-subtle-surface transition-colors"
-           >
-             <div className="flex items-center space-x-3">
-               {theme === 'dark' ? (
-                 <Moon size={18} className="text-muted-text" />
-               ) : (
-                 <Sun size={18} className="text-neon-cyan" />
-               )}
-               <span className="text-sm font-bold text-body-text uppercase font-mono tracking-tight">
-                 {theme === 'dark' ? 'Dark Mode' : 'Light Prototype'}
-               </span>
-             </div>
-             <div className={cn(
-               "w-10 h-6 rounded-full flex items-center px-1 transition-all duration-300",
-               theme === 'dark' ? "bg-neon-cyan" : "bg-muted-text/30"
-             )}>
-               <motion.div 
-                 animate={{ x: theme === 'dark' ? 14 : 0 }}
-                 className="w-4 h-4 bg-background rounded-full shadow" 
-               />
-             </div>
-           </button>
-           <div className="p-4 flex justify-between items-center">
-             <div className="flex items-center space-x-3">
-               <Shield size={18} className="text-muted-text" />
-               <span className="text-sm text-body-text">Strict Bio-Sign Guard</span>
-             </div>
-             <div className="w-10 h-6 bg-subtle-surface rounded-full flex items-center justify-start px-1">
-               <div className="w-4 h-4 bg-muted-text rounded-full shadow" />
-             </div>
-           </div>
-        </div>
-      </div>
+        {/* Target GPA Section */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>TARGET GPA</Text>
+          <Text style={[styles.currentValue, { color: colors.accent }]}>Current: {targetGPA.toFixed(1)}</Text>
+          <View style={styles.inputGroup}>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.text }]}
+              value={newTarget}
+              onChangeText={setNewTarget}
+              keyboardType="decimal-pad"
+              placeholder="0.0 – 4.0"
+              placeholderTextColor={colors.textMuted}
+            />
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.accent }]}
+              onPress={handleUpdateTarget}
+            >
+              <Text style={[styles.buttonText, { color: colors.background }]}>UPDATE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      {/* Danger Zone */}
-      <div className="pt-6 space-y-4">
-        <button
-          onClick={handleReset}
-          className="w-full p-4 rounded-xl border border-neon-red/20 bg-neon-red/5 flex items-center justify-center space-x-2 active:bg-neon-red/10 transition-colors"
+        {/* Theme Toggle */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>APPEARANCE</Text>
+          <View style={styles.settingRow}>
+            <View>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Theme</Text>
+              <Text style={[styles.settingDesc, { color: colors.textMuted }]}>
+                {theme === 'dark' ? 'Dark mode active' : 'Light mode active'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.themeToggle, { backgroundColor: colors.accentBg, borderColor: colors.accentBorder }]}
+              onPress={toggleTheme}
+            >
+              <Text style={[styles.themeToggleText, { color: colors.accent }]}>
+                {theme === 'dark' ? '☀ LIGHT' : '☾ DARK'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Danger Zone */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>DANGER ZONE</Text>
+          <TouchableOpacity
+            style={[styles.dangerButton, { backgroundColor: colors.danger + '18', borderColor: colors.danger + '44' }]}
+            onPress={handleReset}
+          >
+            <Text style={[styles.dangerButtonText, { color: colors.danger }]}>RESET ALL GRADES</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.logoutButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={logout}
         >
-          <Trash2 size={18} className="text-neon-red" />
-          <span className="text-sm font-bold text-neon-red uppercase font-mono">Purge Data Storage</span>
-        </button>
+          <Text style={[styles.logoutButtonText, { color: colors.textSub }]}>LOGOUT</Text>
+        </TouchableOpacity>
 
-        <button
-          onClick={logout}
-          className="w-full p-4 rounded-xl border border-border-accent bg-subtle-surface flex items-center justify-center space-x-2 active:bg-muted-text/10 transition-colors"
-        >
-          <LogOut size={18} className="text-body-text" />
-          <span className="text-sm font-bold text-body-text uppercase font-mono">Sign Out</span>
-        </button>
-      </div>
-
-      {/* Footer */}
-      <div className="text-center py-6">
-        <p className="text-[10px] text-muted-text uppercase tracking-widest">UoP Engineer Command Center</p>
-        <p className="text-[8px] text-muted-text mt-1 opacity-50">Build 2026.04.17 • Ver 1.0.4-alpha</p>
-      </div>
-    </div>
+        <View style={styles.bottomPad} />
+      </ScrollView>
+      <BottomNavBar />
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  wrapper: { flex: 1 },
+  container: { flex: 1 },
+  scrollContent: { padding: 16 },
+  header: { marginBottom: 20 },
+  headerLabel: { fontSize: 9, fontWeight: 'bold', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: 'bold', letterSpacing: 1 },
+  card: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+  },
+  sectionTitle: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  userRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: { fontSize: 20, fontWeight: 'bold' },
+  userInfo: { flex: 1 },
+  userName: { fontSize: 14, fontWeight: 'bold', marginBottom: 2 },
+  userEmail: { fontSize: 11, marginBottom: 2 },
+  userId: { fontSize: 10 },
+  currentValue: { fontSize: 13, fontWeight: 'bold', marginBottom: 10 },
+  inputGroup: { flexDirection: 'row', gap: 10 },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 13,
+  },
+  button: {
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  buttonText: { fontWeight: 'bold', fontSize: 12, letterSpacing: 1 },
+  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  settingLabel: { fontSize: 13, fontWeight: 'bold', marginBottom: 2 },
+  settingDesc: { fontSize: 11 },
+  themeToggle: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  themeToggleText: { fontSize: 11, fontWeight: 'bold', letterSpacing: 1 },
+  dangerButton: {
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  dangerButtonText: { fontWeight: 'bold', fontSize: 12, letterSpacing: 1 },
+  logoutButton: {
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  logoutButtonText: { fontWeight: 'bold', fontSize: 12, letterSpacing: 1 },
+  bottomPad: { height: 8 },
+});
