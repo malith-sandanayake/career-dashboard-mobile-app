@@ -7,9 +7,11 @@ import {
   signOut,
   User,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  signInWithCredential
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
+import { Capacitor } from '@capacitor/core';
 
 interface AuthContextType {
   user: User | null;
@@ -27,18 +29,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Initialize GoogleAuth for native environments using the plugin registry
+    const initNativeAuth = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // Sneaky import to hide from Rollup static analysis
+          const pkg = ['@codetrix-studio', 'capacitor-google-auth'].join('/');
+          const { GoogleAuth } = await import(/* @vite-ignore */ pkg).catch(() => ({ GoogleAuth: null }));
+          if (GoogleAuth) {
+            await GoogleAuth.initialize();
+          }
+        } catch (e) {
+          console.error('Native Auth initialization failed', e);
+        }
+      }
+    };
+    
+    initNativeAuth();
+
     // Ensure persistence is set to local so session survives app restart
     setPersistence(auth, browserLocalPersistence).catch(console.error);
 
-    // Check for redirect result on mount
-    getRedirectResult(auth).then((result) => {
-      if (result) {
-        console.log('Redirect successful', result.user);
-      }
-    }).catch((err) => {
-      console.error('Redirect sign-in error', err);
-      setError(err.message || 'Authentication failed during redirect.');
-    });
+    // Check for redirect result on mount (Web only)
+    if (!Capacitor.isNativePlatform()) {
+      getRedirectResult(auth).then((result) => {
+        if (result) {
+          console.log('Redirect successful', result.user);
+        }
+      }).catch((err) => {
+        console.error('Redirect sign-in error', err);
+        setError(err.message || 'Authentication failed during redirect.');
+      });
+    }
 
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
@@ -55,21 +77,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = async () => {
     setLoading(true);
     setError(null);
-    const provider = new GoogleAuthProvider();
-    // Force account selection to ensure fresh state
-    provider.setCustomParameters({ prompt: 'select_account' });
-    
+
     try {
-      await signInWithRedirect(auth, provider);
+      if (Capacitor.isNativePlatform()) {
+        // --- NATIVE LOGIN (APK) ---
+        // Sneaky import to hide from Rollup static analysis
+        const pkg = ['@codetrix-studio', 'capacitor-google-auth'].join('/');
+        const { GoogleAuth } = await import(/* @vite-ignore */ pkg);
+        const googleUser = await GoogleAuth.signIn();
+        const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+        await signInWithCredential(auth, credential);
+      } else {
+        // --- WEB LOGIN (PREVIEW) ---
+        const provider = new GoogleAuthProvider();
+        await signInWithRedirect(auth, provider);
+      }
     } catch (err: any) {
       console.error('Login failed', err);
-      setError(err.message || 'Login initiation failed.');
+      // Fallback for missing module or native error
+      if (err.message?.includes('Cannot find module') || err.name === 'TypeError') {
+        setError('Login bridge unavailable. Please ensure your APK is synced properly.');
+      } else {
+        setError(err.message || 'Login initiation failed.');
+      }
       setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
+      if (Capacitor.isNativePlatform()) {
+        const pkg = ['@codetrix-studio', 'capacitor-google-auth'].join('/');
+        const { GoogleAuth } = await import(/* @vite-ignore */ pkg);
+        await GoogleAuth.signOut();
+      }
       await signOut(auth);
     } catch (err) {
       console.error('Logout failed', err);
