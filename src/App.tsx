@@ -6,14 +6,17 @@
 import { AuthProvider } from './context/AuthContext';
 import { GradeProvider } from './context/GradeContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { AppNavigator } from './navigation/AppNavigator';
+import { CourseProvider } from './context/CourseContext';
+import { RootNavigator } from './navigation/RootNavigator';
 
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <GradeProvider>
-          <AppNavigator />
+          <CourseProvider>
+            <RootNavigator />
+          </CourseProvider>
         </GradeProvider>
       </AuthProvider>
     </ThemeProvider>
