@@ -1,0 +1,8 @@
+{
+  "appId": "com.e23.academic.command",
+  "appName": "E23 Command Center",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

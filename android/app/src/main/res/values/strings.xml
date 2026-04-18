@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">E23 Command Center</string>
+    <string name="title_activity_main">E23 Command Center</string>
+    <string name="package_name">com.e23.academic.command</string>
+    <string name="custom_url_scheme">com.e23.academic.command</string>
+</resources>
