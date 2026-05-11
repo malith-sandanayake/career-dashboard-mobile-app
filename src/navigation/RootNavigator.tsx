@@ -1,5 +1,5 @@
 // src/navigation/RootNavigator.tsx
-// Root stack navigator: Home → GPAModule or CourseTracker
+// Root stack navigator: Home → GPAModule or CourseTracker or CodingTracker
 
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import { DashboardScreen } from '../views/screens/DashboardScreen';
 import { CurriculumScreen } from '../views/screens/CurriculumScreen';
 import { SettingsScreen } from '../views/screens/SettingsScreen';
 import { CourseTrackerNavigator } from './CourseTrackerNavigator';
+import { CodingTrackerNavigator } from './CodingTrackerNavigator';
 
 const Stack = createNativeStackNavigator();
 
@@ -55,6 +56,7 @@ export const RootNavigator: React.FC = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="GPAModule" component={GPAStackNavigator} />
         <Stack.Screen name="CourseTracker" component={CourseTrackerNavigator} />
+        <Stack.Screen name="CodingTracker" component={CodingTrackerNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
   );

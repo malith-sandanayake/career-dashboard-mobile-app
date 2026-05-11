@@ -13,13 +13,16 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useCourses } from '../../context/CourseContext';
+import { useCoding } from '../../context/CodingContext';
 
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { activeCourses } = useCourses();
+  const { todayMinutes } = useCoding();
 
   const gpaScale = useRef(new Animated.Value(1)).current;
   const ctScale = useRef(new Animated.Value(1)).current;
+  const codingScale = useRef(new Animated.Value(1)).current;
 
   const animatePress = (anim: Animated.Value, callback: () => void) => {
     Animated.sequence([
@@ -89,6 +92,35 @@ export const HomeScreen: React.FC = () => {
               </View>
             </TouchableOpacity>
           </Animated.View>
+
+          {/* Coding Tracker Card */}
+          <Animated.View style={{ transform: [{ scale: codingScale }] }}>
+            <TouchableOpacity
+              activeOpacity={1}
+              style={[styles.card, styles.greenAccent]}
+              onPress={() => animatePress(codingScale, () => navigation.navigate('CodingTracker'))}
+            >
+              <View style={[styles.accentBar, { backgroundColor: '#00FF88' }]} />
+              <View style={styles.cardInner}>
+                <MaterialCommunityIcons name="timer" size={32} color="#00FF88" />
+                <View style={styles.cardText}>
+                  <Text style={styles.cardTitle}>Coding Tracker</Text>
+                  <Text style={styles.cardSub}>
+                    Timer · Streaks · Languages · History
+                  </Text>
+                  {todayMinutes > 0 ? (
+                    <View style={styles.activeRow}>
+                      <Ionicons name="time" size={12} color="#00FF88" />
+                      <Text style={[styles.activeText, { color: '#00FF88' }]}>
+                        {todayMinutes}m today
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#333333" />
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
 
         {/* Footer */}
@@ -136,6 +168,7 @@ const styles = StyleSheet.create({
   },
   cyanAccent: {},
   purpleAccent: {},
+  greenAccent: {},
   accentBar: {
     width: 4,
   },
